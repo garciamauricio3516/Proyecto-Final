@@ -1,0 +1,297 @@
+
+package Modelo;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Tienda {
+
+    private String nombre;
+    private Inventario inventario;
+    private List<Usuario> usuarios;
+    private List<Compra> compras;
+    private List<Torneo> torneos;
+    private double tasaCambioDefecto;
+    private String ultimaFuenteTasa = "DEFECTO";
+
+
+    public Tienda(String nombre) {
+
+        this.nombre = nombre;
+        this.inventario = new Inventario();
+        this.usuarios = new ArrayList<>();
+        this.compras = new ArrayList<>();
+        this.torneos = new ArrayList<>();
+
+        String valor = System.getenv("TASA_DEFECTO");
+
+        try {
+            this.tasaCambioDefecto = Double.parseDouble(valor);
+
+            if (!Double.isFinite(tasaCambioDefecto) || tasaCambioDefecto <= 0) {
+                throw new NumberFormatException();
+            }
+
+        } catch (NumberFormatException | NullPointerException e) {
+            this.tasaCambioDefecto = 4000.0;
+        }
+
+        usuarios.add(new Administrador("admin", "admin123"));
+    }
+
+
+
+    public Cliente registrarCliente(Administrador admin, String user, String pass) {
+
+        if (!esAdministradorRegistrado(admin)) {
+            throw new SecurityException("Administrador no autorizado");
+        }
+
+        if (user == null || user.isBlank() ||
+                pass == null || pass.isBlank()) {
+            throw new IllegalArgumentException("Datos inválidos");
+        }
+
+        for (Usuario usuario : usuarios) {
+            if (usuario.getNombreUsuario().equals(user)) {
+                throw new IllegalStateException("El usuario ya existe");
+            }
+        }
+
+        Cliente cliente = new Cliente(user, pass);
+        usuarios.add(cliente);
+
+        return cliente;
+    }
+
+
+    public Usuario autenticar(String user, String pass) {
+        for (Usuario usuario : usuarios) {
+            if (usuario.autenticar(user, pass)) {
+                return usuario;
+            }
+        }
+        return null;
+    }
+
+    public Cliente buscarCliente(String idCliente) {
+        for (Usuario usuario : usuarios) {
+            if (usuario instanceof Cliente cliente &&
+                    cliente.getId().equals(idCliente)) {
+                return cliente;
+            }
+        }
+        return null;
+    }
+
+    public double obtenerTasaCambio() {
+        return consultarTasaCambio();
+    }
+
+
+    private double consultarTasaCambio() {
+        try {
+            HttpClient cliente = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(5))
+                    .build();
+
+            HttpRequest solicitud = HttpRequest.newBuilder()
+                    .uri(URI.create("https://open.er-api.com/v6/latest/USD"))
+                    .timeout(Duration.ofSeconds(5))
+                    .GET()
+                    .build();
+
+            HttpResponse<String> respuesta = cliente.send(
+                    solicitud,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+
+            if (respuesta.statusCode() == 200) {
+                String cuerpo = respuesta.body();
+                int inicio = cuerpo.indexOf("\"COP\":");
+
+                if (inicio != -1) {
+                    inicio += 6;
+                    int fin = inicio;
+
+                    while (fin < cuerpo.length() &&
+                            (Character.isDigit(cuerpo.charAt(fin)) ||
+                                    cuerpo.charAt(fin) == '.')) {
+                        fin++;
+                    }
+
+                    double tasa = Double.parseDouble(
+                            cuerpo.substring(inicio, fin)
+                    );
+
+                    if (Double.isFinite(tasa) && tasa > 0) {
+                        ultimaFuenteTasa = "API";
+                        return tasa;
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            // Se utiliza la tasa por defecto.
+        }
+
+        System.out.println(
+                "La API no respondió, por lo que se toma un valor por defecto de "
+                        + tasaCambioDefecto
+        );
+        ultimaFuenteTasa = "DEFECTO";
+        return tasaCambioDefecto;
+    }
+
+
+    public Compra comprarProducto(String idCliente, String idProducto) {
+        Cliente cliente = buscarCliente(idCliente);
+
+        if (cliente == null) {
+            throw new IllegalArgumentException("Cliente no encontrado");
+        }
+
+        Producto producto = inventario.buscarProducto(idProducto);
+
+        if (producto == null) {
+            throw new IllegalArgumentException("Producto no encontrado");
+        }
+
+        if (producto instanceof Booster booster && booster.estaVendido()) {
+            throw new IllegalStateException("Booster ya vendido");
+        }
+
+        double tasa = consultarTasaCambio();
+
+        String fuente = ultimaFuenteTasa;
+
+        Compra compra = new Compra(
+                idCliente,
+                List.of(producto),
+                tasa,
+                fuente
+        );
+
+        if (producto instanceof Booster booster) {
+            booster.vender(idCliente);
+        }
+
+        inventario.retirarProducto(idProducto);
+        cliente.recibirProducto(producto);
+        cliente.agregarCompra(compra);
+        compras.add(compra);
+
+        return compra;
+    }
+
+    public List<Carta> abrirBooster(String idCliente, String idBooster) {
+        Cliente cliente = buscarCliente(idCliente);
+
+        if (cliente == null) {
+            throw new IllegalArgumentException("Cliente no encontrado");
+        }
+
+        Producto producto = cliente.getInventarioPersonal()
+                .buscarProducto(idBooster);
+
+        if (!(producto instanceof Booster booster)) {
+            throw new IllegalArgumentException("Booster no encontrado");
+        }
+
+        List<Carta> cartas = booster.abrir(idCliente);
+
+        for (Carta carta : cartas) {
+            cliente.recibirProducto(carta);
+        }
+
+        return cartas;
+    }
+
+    public void agregarTorneo(Torneo torneo) {
+        if (torneo == null) {
+            throw new IllegalArgumentException("Torneo inválido");
+        }
+
+        for (Torneo existente : torneos) {
+            if (existente.getId().equals(torneo.getId())) {
+                throw new IllegalStateException("El torneo ya existe");
+            }
+        }
+
+        torneos.add(torneo);
+    }
+
+    public void inscribirEnTorneo(String idTorneo, String idCliente) {
+        Cliente cliente = buscarCliente(idCliente);
+
+        if (cliente == null) {
+            throw new IllegalArgumentException("Cliente no encontrado");
+        }
+
+        for (Torneo torneo : torneos) {
+            if (torneo.getId().equals(idTorneo)) {
+                torneo.inscribir(idCliente);
+                cliente.inscribirEnTorneo(idTorneo);
+                return;
+            }
+        }
+
+        throw new IllegalArgumentException("Torneo no encontrado");
+    }
+
+    public List<Torneo> listarTorneos() {
+        return new ArrayList<>(torneos);
+    }
+
+    public List<Compra> historialDeCliente(String idCliente) {
+        Cliente cliente = buscarCliente(idCliente);
+
+        if (cliente == null) {
+            throw new IllegalArgumentException("Cliente no encontrado");
+        }
+
+        return cliente.getHistorial();
+    }
+
+    public Inventario getInventario() {
+        return inventario;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public boolean esAdministradorRegistrado(Administrador admin) {
+        return admin != null && admin.esAdmin() && usuarios.contains(admin);
+    }
+
+
+    public void restaurarReferencias() {
+
+        for (Usuario usuario : usuarios) {
+
+            if (usuario instanceof Cliente cliente) {
+
+                for (Compra compra : cliente.getHistorial()) {
+
+                    for (Producto producto : compra.getProductos()) {
+
+                        Producto original = cliente
+                                .getInventarioPersonal()
+                                .buscarProducto(producto.getId());
+
+                        if (original != null) {
+                            compra.reemplazarProducto(original);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}
