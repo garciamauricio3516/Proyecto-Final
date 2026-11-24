@@ -1,0 +1,67 @@
+$kind: http-request
+url: "{{baseUrl}}/productos/{{idCarta}}"
+method: GET
+auth:
+  type: basic
+  credentials:
+    username: "{{clientUser}}"
+    password: "{{clientPassword}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 200 OK\", function () {\r
+
+      \    pm.response.to.have.status(200);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Identificador del producto correcto\", function () {\r
+
+      \    pm.expect(pm.response.json().id).to.eql(\r
+
+      \        pm.collectionVariables.get(\"idCarta\")\r
+
+      \    );\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Nombre del producto correcto\", function () {\r
+
+      \    pm.expect(pm.response.json().nombre).to.eql(\"Dragon Postman\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Tipo de producto correcto\", function () {\r
+
+      \    pm.expect(pm.response.json().tipo).to.eql(\"CARTA\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Conversion a COP correcta\", function () {\r
+
+      \    const datos = pm.response.json();\r
+
+      \    pm.expect(datos.precioCop).to.be.closeTo(\r
+
+      \        datos.precioUsd * datos.tasaCambio, 0.01\r
+
+      \    );\r
+
+      });"
+    language: text/javascript
+order: 6000

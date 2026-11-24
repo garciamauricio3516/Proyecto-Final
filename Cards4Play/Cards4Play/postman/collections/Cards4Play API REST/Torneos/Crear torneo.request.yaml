@@ -1,0 +1,100 @@
+$kind: http-request
+url: "\t{{baseUrl}}/torneos"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"nombre\": \"Torneo Cards4Play Postman\",\r
+
+    \    \"fecha\": \"2026-12-20\",\r
+
+    \    \"maxParticipantes\": 1\r
+
+    }"
+auth:
+  type: basic
+  credentials:
+    username: "{{adminUser}}"
+    password: "{{adminPassword}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 201 Created\", function () {\r
+
+      \    pm.response.to.have.status(201);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Identificador del torneo valido\", function () {\r
+
+      \    pm.expect(pm.response.json().id).to.be.a(\"string\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Nombre del torneo correcto\", function () {\r
+
+      \    pm.expect(pm.response.json().nombre)\r
+
+      \        .to.eql(\"Torneo Cards4Play Postman\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Fecha del torneo correcta\", function () {\r
+
+      \    pm.expect(pm.response.json().fecha)\r
+
+      \        .to.eql(\"2026-12-20\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Capacidad maxima correcta\", function () {\r
+
+      \    pm.expect(pm.response.json().maxParticipantes).to.eql(1);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El torneo inicia sin participantes\", function () {\r
+
+      \    pm.expect(pm.response.json().participantesInscritos).to.eql(0);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El torneo tiene un cupo disponible\", function () {\r
+
+      \    pm.expect(pm.response.json().cuposDisponibles).to.eql(1);\r
+
+      });\r
+
+      \r
+
+      if (pm.response.code === 201) {\r
+
+      \    pm.collectionVariables.set(\r
+
+      \        \"idTorneo\", pm.response.json().id\r
+
+      \    );\r
+
+      }"
+    language: text/javascript
+order: 1000

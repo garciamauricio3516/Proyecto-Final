@@ -1,0 +1,101 @@
+$kind: http-request
+url: "{{baseUrl}}/productos"
+method: GET
+auth:
+  type: basic
+  credentials:
+    username: "{{clientUser}}"
+    password: "{{clientPassword}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 200 OK\", function () {\r
+
+      \    pm.response.to.have.status(200);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El inventario es una lista\", function () {\r
+
+      \    pm.expect(pm.response.json()).to.be.an(\"array\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El inventario contiene productos\", function () {\r
+
+      \    pm.expect(pm.response.json().length).to.be.above(0);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La carta registrada aparece en el inventario\", function () {\r
+
+      \    const productos = pm.response.json();\r
+
+      \    const idCarta = pm.collectionVariables.get(\"idCarta\");\r
+
+      \r
+
+      \    pm.expect(productos.some(p => p.id === idCarta)).to.eql(true);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El booster aparece en el inventario\", function () {\r
+
+      \    const productos = pm.response.json();\r
+
+      \    const idBooster = pm.collectionVariables.get(\"idBooster\");\r
+
+      \r
+
+      \    pm.expect(productos.some(p => p.id === idBooster)).to.eql(true);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Todos los precios COP son correctos\", function () {\r
+
+      \    pm.response.json().forEach(function (producto) {\r
+
+      \        pm.expect(producto.precioCop).to.be.closeTo(\r
+
+      \            producto.precioUsd * producto.tasaCambio, 0.01\r
+
+      \        );\r
+
+      \    });\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Los boosters mantienen sus cartas ocultas\", function () {\r
+
+      \    pm.response.json()\r
+
+      \        .filter(p => p.tipo === \"BOOSTER\")\r
+
+      \        .forEach(function (booster) {\r
+
+      \            pm.expect(booster).to.not.have.property(\"cartas\");\r
+
+      \        });\r
+
+      });"
+    language: text/javascript
+order: 5000

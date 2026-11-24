@@ -1,0 +1,15 @@
+$kind: collection
+variables:
+  baseUrl: ""
+  adminUser: ""
+  adminPassword: ""
+  clientUser: ""
+  clientPassword: ""
+  nuevoCliente: ""
+  idCarta: ""
+  idAccesorio: ""
+  idProductoSellado: ""
+  idBooster: ""
+  idCompraCarta: ""
+  idCompraBooster: ""
+  idTorneo: ""

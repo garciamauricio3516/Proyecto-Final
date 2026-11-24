@@ -1,0 +1,67 @@
+$kind: http-request
+url: "\t{{baseUrl}}/torneos/{{idTorneo}}/inscripciones"
+method: POST
+auth:
+  type: basic
+  credentials:
+    username: "{{clientUser}}"
+    password: "{{clientPassword}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 201 Created\", function () {\r
+
+      \    pm.response.to.have.status(201);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La inscripcion identifica al cliente\", function () {\r
+
+      \    pm.expect(pm.response.json().idCliente)\r
+
+      \        .to.be.a(\"string\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La inscripcion corresponde al torneo correcto\", function () {\r
+
+      \    pm.expect(pm.response.json().torneo.id).to.eql(\r
+
+      \        pm.collectionVariables.get(\"idTorneo\")\r
+
+      \    );\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El torneo tiene un participante inscrito\", function () {\r
+
+      \    pm.expect(pm.response.json().torneo.participantesInscritos)\r
+
+      \        .to.eql(1);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El torneo ya no tiene cupos disponibles\", function () {\r
+
+      \    pm.expect(pm.response.json().torneo.cuposDisponibles)\r
+
+      \        .to.eql(0);\r
+
+      });"
+    language: text/javascript
+order: 3000

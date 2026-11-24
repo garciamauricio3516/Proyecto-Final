@@ -30,3 +30,6 @@ datos/*.json
 # Archivos del sistema
 .DS_Store
 Thumbs.db
+# Configuracion local de Postman
+.postman/
+postman/globals/

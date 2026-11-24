@@ -1,0 +1,55 @@
+$kind: http-request
+url: "{{baseUrl}}/torneos"
+method: GET
+auth:
+  type: basic
+  credentials:
+    username: "{{clientUser}}"
+    password: "{{clientPassword}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 200 OK\", function () {\r
+
+      \    pm.response.to.have.status(200);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta contiene una lista de torneos\", function () {\r
+
+      \    pm.expect(pm.response.json()).to.be.an(\"array\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Existe al menos un torneo\", function () {\r
+
+      \    pm.expect(pm.response.json().length).to.be.above(0);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El torneo creado aparece en la lista\", function () {\r
+
+      \    const torneos = pm.response.json();\r
+
+      \    const id = pm.collectionVariables.get(\"idTorneo\");\r
+
+      \r
+
+      \    pm.expect(torneos.some(t => t.id === id)).to.eql(true);\r
+
+      });"
+    language: text/javascript
+order: 2000

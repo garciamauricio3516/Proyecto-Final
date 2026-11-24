@@ -1,0 +1,61 @@
+$kind: http-request
+url: "\t{{baseUrl}}/compras"
+method: GET
+auth:
+  type: basic
+  credentials:
+    username: "{{nuevoCliente}}"
+    password: "{{clientPassword}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 200 OK\", function () {\r
+
+      \    pm.response.to.have.status(200);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El historial es una lista\", function () {\r
+
+      \    pm.expect(pm.response.json()).to.be.an(\"array\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El segundo cliente no tiene compras\", function () {\r
+
+      \    pm.expect(pm.response.json()).to.have.lengthOf(0);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"No se exponen compras de otros clientes\", function () {\r
+
+      \    const compras = pm.response.json();\r
+
+      \    const idCarta = pm.collectionVariables.get(\"idCompraCarta\");\r
+
+      \    const idBooster = pm.collectionVariables.get(\"idCompraBooster\");\r
+
+      \r
+
+      \    pm.expect(compras.some(c =>\r
+
+      \        c.id === idCarta || c.id === idBooster\r
+
+      \    )).to.eql(false);\r
+
+      });"
+    language: text/javascript
+order: 12000

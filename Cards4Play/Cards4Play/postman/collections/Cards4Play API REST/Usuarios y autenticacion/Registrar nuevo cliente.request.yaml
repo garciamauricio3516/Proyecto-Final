@@ -1,0 +1,79 @@
+$kind: http-request
+url: "{{baseUrl}}/usuarios"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"nombreUsuario\": \"{{nuevoCliente}}\",\r
+
+    \    \"contrasena\": \"cliente123\"\r
+
+    }"
+auth:
+  type: basic
+  credentials:
+    username: "{{adminUser}}"
+    password: "{{adminPassword}}"
+scripts:
+  - type: beforeRequest
+    code: "pm.collectionVariables.set(\r
+
+      \    \"nuevoCliente\",\r
+
+      \    \"cliente_postman_\" + Date.now()\r
+
+      );"
+    language: text/javascript
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 201 Created\", function () {\r
+
+      \    pm.response.to.have.status(201);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El cliente tiene un identificador\", function () {\r
+
+      \    pm.expect(pm.response.json().id).to.be.a(\"string\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Nombre de usuario correcto\", function () {\r
+
+      \    pm.expect(pm.response.json().nombreUsuario).to.eql(\r
+
+      \        pm.collectionVariables.get(\"nuevoCliente\")\r
+
+      \    );\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Rol CLIENTE asignado correctamente\", function () {\r
+
+      \    pm.expect(pm.response.json().rol).to.eql(\"CLIENTE\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta no expone la contrasena\", function () {\r
+
+      \    pm.expect(pm.response.json()).to.not.have.property(\"contrasena\");\r
+
+      });"
+    language: text/javascript
+order: 3000

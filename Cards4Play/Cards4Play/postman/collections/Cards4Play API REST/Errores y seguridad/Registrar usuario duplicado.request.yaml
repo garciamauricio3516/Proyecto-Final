@@ -1,0 +1,42 @@
+$kind: http-request
+url: "{{baseUrl}}/usuarios"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"nombreUsuario\": \"{{nuevoCliente}}\",\r
+
+    \    \"contrasena\": \"cliente123\"\r
+
+    }"
+auth:
+  type: basic
+  credentials:
+    username: "{{adminUser}}"
+    password: "{{adminPassword}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 409 Conflict\", function () {\r
+
+      \    pm.response.to.have.status(409);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El usuario duplicado es rechazado\", function () {\r
+
+      \    pm.expect(pm.response.json().error).to.be.a(\"string\");\r
+
+      });"
+    language: text/javascript
+order: 6000

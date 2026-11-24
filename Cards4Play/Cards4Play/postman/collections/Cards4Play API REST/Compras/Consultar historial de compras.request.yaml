@@ -1,0 +1,83 @@
+$kind: http-request
+url: "{{baseUrl}}/compras"
+method: GET
+auth:
+  type: basic
+  credentials:
+    username: "{{clientUser}}"
+    password: "{{clientPassword}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 200 OK\", function () {\r
+
+      \    pm.response.to.have.status(200);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El historial es una lista\", function () {\r
+
+      \    pm.expect(pm.response.json()).to.be.an(\"array\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El historial contiene al menos dos compras\", function () {\r
+
+      \    pm.expect(pm.response.json().length).to.be.at.least(2);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La compra de la carta aparece en el historial\", function () {\r
+
+      \    const compras = pm.response.json();\r
+
+      \    const id = pm.collectionVariables.get(\"idCompraCarta\");\r
+
+      \r
+
+      \    pm.expect(compras.some(c => c.id === id)).to.eql(true);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La compra del booster aparece en el historial\", function () {\r
+
+      \    const compras = pm.response.json();\r
+
+      \    const id = pm.collectionVariables.get(\"idCompraBooster\");\r
+
+      \r
+
+      \    pm.expect(compras.some(c => c.id === id)).to.eql(true);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Las compras conservan su fuente de conversion\", function () {\r
+
+      \    pm.response.json().forEach(function (compra) {\r
+
+      \        pm.expect(compra.fuenteTasa)\r
+
+      \            .to.be.oneOf([\"API\", \"DEFECTO\"]);\r
+
+      \    });\r
+
+      });"
+    language: text/javascript
+order: 3000

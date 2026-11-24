@@ -1,0 +1,33 @@
+$kind: http-request
+url: "{{baseUrl}}/productos/id-inexistente"
+method: GET
+auth:
+  type: basic
+  credentials:
+    username: "{{clientUser}}"
+    password: "{{clientPassword}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 404 Not Found\", function () {\r
+
+      \    pm.response.to.have.status(404);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El producto inexistente genera un error\", function () {\r
+
+      \    pm.expect(pm.response.json().error).to.be.a(\"string\");\r
+
+      });"
+    language: text/javascript
+order: 5000
