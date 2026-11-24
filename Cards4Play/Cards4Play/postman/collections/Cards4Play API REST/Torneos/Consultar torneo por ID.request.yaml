@@ -1,0 +1,67 @@
+$kind: http-request
+url: "\t{{baseUrl}}/torneos/{{idTorneo}}"
+method: GET
+auth:
+  type: basic
+  credentials:
+    username: "{{clientUser}}"
+    password: "{{clientPassword}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 200 OK\", function () {\r
+
+      \    pm.response.to.have.status(200);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Identificador del torneo correcto\", function () {\r
+
+      \    pm.expect(pm.response.json().id).to.eql(\r
+
+      \        pm.collectionVariables.get(\"idTorneo\")\r
+
+      \    );\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Nombre del torneo correcto\", function () {\r
+
+      \    pm.expect(pm.response.json().nombre)\r
+
+      \        .to.eql(\"Torneo Cards4Play Postman\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La inscripcion se conserva\", function () {\r
+
+      \    pm.expect(pm.response.json().participantesInscritos)\r
+
+      \        .to.eql(1);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El torneo esta lleno\", function () {\r
+
+      \    pm.expect(pm.response.json().cuposDisponibles)\r
+
+      \        .to.eql(0);\r
+
+      });"
+    language: text/javascript
+order: 4000

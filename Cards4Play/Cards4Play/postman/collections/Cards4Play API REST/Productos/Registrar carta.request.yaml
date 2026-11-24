@@ -1,0 +1,104 @@
+$kind: http-request
+url: "\t{{baseUrl}}/cartas"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"nombre\": \"Dragon Postman\",\r
+
+    \    \"rareza\": \"R\",\r
+
+    \    \"precioUsd\": 10\r
+
+    }"
+auth:
+  type: basic
+  credentials:
+    username: "{{adminUser}}"
+    password: "{{adminPassword}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 201 Created\", function () {\r
+
+      \    pm.response.to.have.status(201);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Nombre de la carta correcto\", function () {\r
+
+      \    pm.expect(pm.response.json().nombre).to.eql(\"Dragon Postman\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Tipo de producto correcto\", function () {\r
+
+      \    pm.expect(pm.response.json().tipo).to.eql(\"CARTA\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Rareza correcta\", function () {\r
+
+      \    pm.expect(pm.response.json().rareza).to.eql(\"R\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Precio USD correcto\", function () {\r
+
+      \    pm.expect(pm.response.json().precioUsd).to.eql(10);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Conversion a COP correcta\", function () {\r
+
+      \    const datos = pm.response.json();\r
+
+      \    pm.expect(datos.precioCop).to.be.closeTo(\r
+
+      \        datos.precioUsd * datos.tasaCambio, 0.01\r
+
+      \    );\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Fuente de tasa de cambio valida\", function () {\r
+
+      \    pm.expect(pm.response.json().fuenteTasa)\r
+
+      \        .to.be.oneOf([\"API\", \"DEFECTO\"]);\r
+
+      });\r
+
+      \r
+
+      if (pm.response.code === 201) {\r
+
+      \    pm.collectionVariables.set(\r
+
+      \        \"idCarta\", pm.response.json().id\r
+
+      \    );\r
+
+      }"
+    language: text/javascript
+order: 1000

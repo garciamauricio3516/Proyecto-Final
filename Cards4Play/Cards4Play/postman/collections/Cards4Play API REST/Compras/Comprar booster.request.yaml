@@ -1,0 +1,100 @@
+$kind: http-request
+url: "\t{{baseUrl}}/compras"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"idProducto\": \"{{idBooster}}\"\r
+
+    }"
+auth:
+  type: basic
+  credentials:
+    username: "{{clientUser}}"
+    password: "{{clientPassword}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 201 Created\", function () {\r
+
+      \    pm.response.to.have.status(201);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Identificador de compra valido\", function () {\r
+
+      \    pm.expect(pm.response.json().id).to.be.a(\"string\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El booster comprado es el correcto\", function () {\r
+
+      \    pm.expect(pm.response.json().productos[0].id).to.eql(\r
+
+      \        pm.collectionVariables.get(\"idBooster\")\r
+
+      \    );\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Total USD correcto\", function () {\r
+
+      \    pm.expect(pm.response.json().totalUsd).to.eql(15);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Total COP valido\", function () {\r
+
+      \    pm.expect(pm.response.json().totalCop).to.be.above(0);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Fuente de conversion valida\", function () {\r
+
+      \    pm.expect(pm.response.json().fuenteTasa)\r
+
+      \        .to.be.oneOf([\"API\", \"DEFECTO\"]);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Las cartas del booster siguen ocultas\", function () {\r
+
+      \    pm.expect(pm.response.json().productos[0])\r
+
+      \        .to.not.have.property(\"cartas\");\r
+
+      });\r
+
+      \r
+
+      if (pm.response.code === 201) {\r
+
+      \    pm.collectionVariables.set(\r
+
+      \        \"idCompraBooster\", pm.response.json().id\r
+
+      \    );\r
+
+      }"
+    language: text/javascript
+order: 2000

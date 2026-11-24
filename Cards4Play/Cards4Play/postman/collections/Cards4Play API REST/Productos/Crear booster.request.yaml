@@ -1,0 +1,96 @@
+$kind: http-request
+url: "\t{{baseUrl}}/boosters"
+method: POST
+body:
+  type: json
+  content: "{\r\n    \"precioUsd\": 15\r\n}"
+auth:
+  type: basic
+  credentials:
+    username: "{{adminUser}}"
+    password: "{{adminPassword}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 201 Created\", function () {\r
+
+      \    pm.response.to.have.status(201);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Identificador del booster valido\", function () {\r
+
+      \    pm.expect(pm.response.json().id).to.be.a(\"string\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Tipo de producto correcto\", function () {\r
+
+      \    pm.expect(pm.response.json().tipo).to.eql(\"BOOSTER\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Precio USD correcto\", function () {\r
+
+      \    pm.expect(pm.response.json().precioUsd).to.eql(15);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Conversion a COP correcta\", function () {\r
+
+      \    const datos = pm.response.json();\r
+
+      \    pm.expect(datos.precioCop).to.be.closeTo(\r
+
+      \        datos.precioUsd * datos.tasaCambio, 0.01\r
+
+      \    );\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Fuente de tasa de cambio valida\", function () {\r
+
+      \    pm.expect(pm.response.json().fuenteTasa)\r
+
+      \        .to.be.oneOf([\"API\", \"DEFECTO\"]);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El booster no revela sus cartas\", function () {\r
+
+      \    pm.expect(pm.response.json()).to.not.have.property(\"cartas\");\r
+
+      });\r
+
+      \r
+
+      if (pm.response.code === 201) {\r
+
+      \    pm.collectionVariables.set(\r
+
+      \        \"idBooster\", pm.response.json().id\r
+
+      \    );\r
+
+      }"
+    language: text/javascript
+order: 4000

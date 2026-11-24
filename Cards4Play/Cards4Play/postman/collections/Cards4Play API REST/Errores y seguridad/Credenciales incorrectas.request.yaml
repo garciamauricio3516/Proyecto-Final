@@ -1,0 +1,33 @@
+$kind: http-request
+url: "\t{{baseUrl}}/usuarios/me"
+method: GET
+auth:
+  type: basic
+  credentials:
+    username: "{{adminUser}}"
+    password: incorrecta123
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 401 Unauthorized\", function () {\r
+
+      \    pm.response.to.have.status(401);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Las credenciales incorrectas son rechazadas\", function () {\r
+
+      \    pm.expect(pm.response.json().error).to.be.a(\"string\");\r
+
+      });"
+    language: text/javascript
+order: 2000

@@ -1,0 +1,33 @@
+$kind: http-request
+url: "{{baseUrl}}/boosters/{{idBooster}}/abrir"
+method: POST
+auth:
+  type: basic
+  credentials:
+    username: "{{nuevoCliente}}"
+    password: "{{clientPassword}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 403 Forbidden\", function () {\r
+
+      \    pm.response.to.have.status(403);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El cliente no puede abrir un booster ajeno\", function () {\r
+
+      \    pm.expect(pm.response.json().error).to.be.a(\"string\");\r
+
+      });"
+    language: text/javascript
+order: 8000

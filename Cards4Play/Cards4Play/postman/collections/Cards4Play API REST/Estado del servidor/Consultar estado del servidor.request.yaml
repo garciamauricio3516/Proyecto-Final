@@ -1,0 +1,40 @@
+$kind: http-request
+url: "{{baseUrl}}/health"
+method: GET
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 200 OK\", function () {\r
+
+      \    pm.response.to.have.status(200);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El servidor esta funcionando\", function () {\r
+
+      \    const datos = pm.response.json();\r
+
+      \    pm.expect(datos.estado).to.eql(\"OK\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La aplicacion es Cards4Play\", function () {\r
+
+      \    const datos = pm.response.json();\r
+
+      \    pm.expect(datos.aplicacion).to.eql(\"Cards4Play\");\r
+
+      });"
+    language: text/javascript
+order: 1000

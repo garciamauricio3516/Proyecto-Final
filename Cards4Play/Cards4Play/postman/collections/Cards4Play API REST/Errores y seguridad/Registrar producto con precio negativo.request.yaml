@@ -1,0 +1,44 @@
+$kind: http-request
+url: "\t{{baseUrl}}/cartas"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"nombre\": \"Carta invalida\",\r
+
+    \    \"rareza\": \"R\",\r
+
+    \    \"precioUsd\": -10\r
+
+    }"
+auth:
+  type: basic
+  credentials:
+    username: "{{adminUser}}"
+    password: "{{adminPassword}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 400 Bad Request\", function () {\r
+
+      \    pm.response.to.have.status(400);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El precio negativo es rechazado\", function () {\r
+
+      \    pm.expect(pm.response.json().error).to.be.a(\"string\");\r
+
+      });"
+    language: text/javascript
+order: 4000

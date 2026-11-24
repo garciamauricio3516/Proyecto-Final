@@ -1,0 +1,113 @@
+$kind: http-request
+url: "{{baseUrl}}/boosters/{{idBooster}}/abrir"
+method: POST
+auth:
+  type: basic
+  credentials:
+    username: "{{clientUser}}"
+    password: "{{clientPassword}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 200 OK\", function () {\r
+
+      \    pm.response.to.have.status(200);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Identificador del booster correcto\", function () {\r
+
+      \    pm.expect(pm.response.json().idBooster).to.eql(\r
+
+      \        pm.collectionVariables.get(\"idBooster\")\r
+
+      \    );\r
+
+      });\r
+
+      \r
+
+      pm.test(\"El booster contiene exactamente 10 cartas\", function () {\r
+
+      \    pm.expect(pm.response.json().cantidadCartas).to.eql(10);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Se revelan las 10 cartas\", function () {\r
+
+      \    pm.expect(pm.response.json().cartas)\r
+
+      \        .to.be.an(\"array\").with.lengthOf(10);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Todas las cartas tienen rarezas validas\", function () {\r
+
+      \    pm.response.json().cartas.forEach(function (carta) {\r
+
+      \        pm.expect(carta.rareza)\r
+
+      \            .to.be.oneOf([\"N\", \"UC\", \"R\", \"SR\", \"UR\"]);\r
+
+      \    });\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Existe al menos una carta de rareza R o superior\", function () {\r
+
+      \    const cartas = pm.response.json().cartas;\r
+
+      \r
+
+      \    pm.expect(cartas.some(c =>\r
+
+      \        [\"R\", \"SR\", \"UR\"].includes(c.rareza)\r
+
+      \    )).to.eql(true);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Todas las cartas tienen identificadores diferentes\", function () {\r
+
+      \    const ids = pm.response.json().cartas.map(c => c.id);\r
+
+      \r
+
+      \    pm.expect(new Set(ids).size).to.eql(10);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Conversion COP correcta para las cartas\", function () {\r
+
+      \    pm.response.json().cartas.forEach(function (carta) {\r
+
+      \        pm.expect(carta.precioCop).to.be.closeTo(\r
+
+      \            carta.precioUsd * carta.tasaCambio, 0.01\r
+
+      \        );\r
+
+      \    });\r
+
+      });"
+    language: text/javascript
+order: 1000

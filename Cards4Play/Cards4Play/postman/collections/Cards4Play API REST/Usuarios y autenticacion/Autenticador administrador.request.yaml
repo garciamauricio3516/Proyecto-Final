@@ -1,0 +1,55 @@
+$kind: http-request
+url: "{{baseUrl}}/usuarios/me"
+method: GET
+auth:
+  type: basic
+  credentials:
+    username: "{{adminUser}}"
+    password: "{{adminPassword}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Codigo HTTP 200 OK\", function () {\r
+
+      \    pm.response.to.have.status(200);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta es JSON\", function () {\r
+
+      \    pm.response.to.be.json;\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Usuario administrador autenticado\", function () {\r
+
+      \    const datos = pm.response.json();\r
+
+      \    pm.expect(datos.nombreUsuario).to.eql(\"admin\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Rol de administrador correcto\", function () {\r
+
+      \    const datos = pm.response.json();\r
+
+      \    pm.expect(datos.rol).to.eql(\"ADMIN\");\r
+
+      });\r
+
+      \r
+
+      pm.test(\"La respuesta no expone la contrasena\", function () {\r
+
+      \    const datos = pm.response.json();\r
+
+      \    pm.expect(datos).to.not.have.property(\"contrasena\");\r
+
+      });"
+    language: text/javascript
+order: 1000
