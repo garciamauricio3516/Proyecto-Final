@@ -1,0 +1,32 @@
+# Archivos compilados
+target/
+out/
+*.class
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# NetBeans y Eclipse
+nbproject/private/
+.settings/
+.project
+.classpath
+
+# Datos locales
+datos/*.json
+
+# Variables de entorno
+.env
+.env.*
+
+# Archivos temporales
+*.log
+*.tmp
+
+# Archivos comprimidos
+*.zip
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
