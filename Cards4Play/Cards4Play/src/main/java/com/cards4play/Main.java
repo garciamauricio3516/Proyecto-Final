@@ -45,6 +45,18 @@ public class Main {
             System.out.println("Bienvenido a " + tienda.getNombre());
             System.out.println("Controladores inicializados correctamente.");
 
+            // Iniciar servidor API REST
+            ApiRest apiRest = new ApiRest(
+                    tienda,
+                    controladorUsuario,
+                    controladorProducto,
+                    controladorCompra,
+                    controladorBooster,
+                    controladorTorneo
+            );
+
+            apiRest.iniciar();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
