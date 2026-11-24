@@ -32,7 +32,18 @@ public class Tienda {
 
         this.tasaCambioDefecto = leerTasaDefecto();
 
-        usuarios.add(new Administrador("admin", "admin123"));
+        String adminPassword = System.getenv("ADMIN_PASSWORD");
+
+        if (adminPassword == null || adminPassword.isBlank()) {
+            if (System.getenv("RAILWAY_ENVIRONMENT") != null) {
+                throw new IllegalStateException(
+                        "Debe configurar ADMIN_PASSWORD en Railway");
+            }
+
+            adminPassword = "admin123";
+        }
+
+        usuarios.add(new Administrador("admin", adminPassword));
     }
 
 
