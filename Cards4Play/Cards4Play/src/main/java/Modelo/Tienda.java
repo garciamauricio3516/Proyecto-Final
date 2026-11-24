@@ -1,5 +1,7 @@
 
 package Modelo;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -28,18 +30,7 @@ public class Tienda {
         this.compras = new ArrayList<>();
         this.torneos = new ArrayList<>();
 
-        String valor = System.getenv("TASA_DEFECTO");
-
-        try {
-            this.tasaCambioDefecto = Double.parseDouble(valor);
-
-            if (!Double.isFinite(tasaCambioDefecto) || tasaCambioDefecto <= 0) {
-                throw new NumberFormatException();
-            }
-
-        } catch (NumberFormatException | NullPointerException e) {
-            this.tasaCambioDefecto = 4000.0;
-        }
+        this.tasaCambioDefecto = leerTasaDefecto();
 
         usuarios.add(new Administrador("admin", "admin123"));
     }
@@ -89,19 +80,47 @@ public class Tienda {
         return null;
     }
 
+    private double leerTasaDefecto() {
+
+        String valor = System.getenv("TASA_DEFECTO");
+
+        if (valor != null && !valor.isBlank()) {
+            try {
+                double tasa = Double.parseDouble(valor.trim());
+
+                if (Double.isFinite(tasa) && tasa > 0) {
+                    return tasa;
+                }
+
+            } catch (NumberFormatException e) {
+                // Se utiliza el valor predeterminado.
+            }
+        }
+
+        return 4000.0;
+    }
+
     public double obtenerTasaCambio() {
         return consultarTasaCambio();
     }
 
+    public String getUltimaFuenteTasa() {
+        return ultimaFuenteTasa;
+    }
 
     private double consultarTasaCambio() {
+
+        this.tasaCambioDefecto = leerTasaDefecto();
+
         try {
             HttpClient cliente = HttpClient.newBuilder()
                     .connectTimeout(Duration.ofSeconds(5))
                     .build();
 
             HttpRequest solicitud = HttpRequest.newBuilder()
-                    .uri(URI.create("https://open.er-api.com/v6/latest/USD"))
+                    .uri(URI.create(
+                            "https://open.er-api.com/v6/latest/USD"
+                    ))
                     .timeout(Duration.ofSeconds(5))
                     .GET()
                     .build();
@@ -112,22 +131,16 @@ public class Tienda {
             );
 
             if (respuesta.statusCode() == 200) {
-                String cuerpo = respuesta.body();
-                int inicio = cuerpo.indexOf("\"COP\":");
 
-                if (inicio != -1) {
-                    inicio += 6;
-                    int fin = inicio;
+                JsonObject json = JsonParser
+                        .parseString(respuesta.body())
+                        .getAsJsonObject();
 
-                    while (fin < cuerpo.length() &&
-                            (Character.isDigit(cuerpo.charAt(fin)) ||
-                                    cuerpo.charAt(fin) == '.')) {
-                        fin++;
-                    }
+                JsonObject tasas = json.getAsJsonObject("rates");
 
-                    double tasa = Double.parseDouble(
-                            cuerpo.substring(inicio, fin)
-                    );
+                if (tasas != null && tasas.has("COP")) {
+
+                    double tasa = tasas.get("COP").getAsDouble();
 
                     if (Double.isFinite(tasa) && tasa > 0) {
                         ultimaFuenteTasa = "API";
@@ -135,6 +148,9 @@ public class Tienda {
                     }
                 }
             }
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
 
         } catch (Exception e) {
             // Se utiliza la tasa por defecto.
@@ -144,12 +160,35 @@ public class Tienda {
                 "La API no respondió, por lo que se toma un valor por defecto de "
                         + tasaCambioDefecto
         );
+
         ultimaFuenteTasa = "DEFECTO";
+
         return tasaCambioDefecto;
     }
 
+    private Booster buscarBoosterVendido(String idBooster) {
+
+        for (Usuario usuario : usuarios) {
+
+            if (usuario instanceof Cliente cliente) {
+
+                Producto producto = cliente
+                        .getInventarioPersonal()
+                        .buscarProducto(idBooster);
+
+                if (producto instanceof Booster booster
+                        && booster.estaVendido()) {
+
+                    return booster;
+                }
+            }
+        }
+
+        return null;
+    }
 
     public Compra comprarProducto(String idCliente, String idProducto) {
+
         Cliente cliente = buscarCliente(idCliente);
 
         if (cliente == null) {
@@ -159,6 +198,11 @@ public class Tienda {
         Producto producto = inventario.buscarProducto(idProducto);
 
         if (producto == null) {
+
+            if (buscarBoosterVendido(idProducto) != null) {
+                throw new IllegalStateException("Booster ya vendido");
+            }
+
             throw new IllegalArgumentException("Producto no encontrado");
         }
 
@@ -190,6 +234,7 @@ public class Tienda {
     }
 
     public List<Carta> abrirBooster(String idCliente, String idBooster) {
+
         Cliente cliente = buscarCliente(idCliente);
 
         if (cliente == null) {
@@ -200,6 +245,21 @@ public class Tienda {
                 .buscarProducto(idBooster);
 
         if (!(producto instanceof Booster booster)) {
+
+            if (buscarBoosterVendido(idBooster) != null) {
+                throw new SecurityException(
+                        "El booster pertenece a otro cliente"
+                );
+            }
+
+            Producto productoTienda = inventario.buscarProducto(idBooster);
+
+            if (productoTienda instanceof Booster) {
+                throw new IllegalStateException(
+                        "El booster debe comprarse antes de abrirlo"
+                );
+            }
+
             throw new IllegalArgumentException("Booster no encontrado");
         }
 
