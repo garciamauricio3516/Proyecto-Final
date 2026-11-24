@@ -1,0 +1,15 @@
+target/
+out/
+.idea/
+.git/
+.postman/
+postman/
+datos/
+*.iml
+*.class
+*.zip
+*.log
+*.tmp
+.env
+.env.*
+convertir_postman.py
