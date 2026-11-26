@@ -617,3 +617,50 @@ en la nube.
 El proyecto fue desarrollado como ejercicio académico
 de la asignatura Desarrollo de Software de la
 Institución Universitaria EAM.
+
+## Colecciones de Postman por entorno
+
+El proyecto Cards4Play dispone de dos colecciones independientes de Postman para facilitar las pruebas locales y remotas de la API REST.
+
+| Característica | Docker Local | Railway |
+|---|---|---|
+| Carpetas | 7 | 7 |
+| Peticiones totales | 41 | 41 |
+| Peticiones automatizadas | 32 | 32 |
+| Peticiones manuales | 9 | 9 |
+| Pruebas automatizadas | 169 | 169 |
+
+### Docker Local
+
+- Archivo: `postman/Cards4Play-Docker-Local.postman_collection.json`
+- URL: `http://localhost:4567`
+- Usuario administrador: `admin`
+- Contraseña de desarrollo: `admin123`
+- Persistencia mediante el volumen Docker `cards4play-datos`.
+
+### Railway
+
+- Archivo: `postman/Cards4Play-Railway.postman_collection.json`
+- URL: `https://proyecto-final-production-40d11b60.up.railway.app`
+- Usuario administrador: `admin`
+- Contraseña configurada mediante la variable de entorno `ADMIN_PASSWORD`.
+
+Por seguridad, la contraseña del administrador de Railway no se incluye en la colección exportada. Debe configurarse en la variable `adminPassword` de Postman antes de ejecutar las peticiones.
+
+### Ejecución de las pruebas
+
+1. Importar la colección correspondiente en Postman.
+2. Verificar las variables de conexión y autenticación.
+3. Seleccionar las 32 peticiones automatizadas en Collection Runner.
+4. Excluir las 9 peticiones identificadas como Manual.
+5. Ejecutar una iteración.
+
+Las peticiones manuales están destinadas a demostraciones individuales y requieren configurar las credenciales y los identificadores correspondientes.
+
+Durante el desarrollo se obtuvieron 169 pruebas aprobadas en Docker local y 169 en Railway. Las colecciones exportadas posteriormente fueron revisadas estructuralmente y se ajustaron sus credenciales para evitar publicar contraseñas privadas.
+
+### Independencia de los entornos
+
+Docker local y Railway ejecutan la misma aplicación, pero mantienen datos independientes. Las operaciones realizadas en un entorno no modifican los datos del otro.
+
+Docker local conserva los datos mediante un volumen persistente. Railway utiliza el almacenamiento del contenedor, por lo que sus datos pueden perderse durante un nuevo despliegue.
