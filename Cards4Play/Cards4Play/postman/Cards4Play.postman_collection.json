@@ -1238,6 +1238,77 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Consultar historial despues de abrir booster",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado HTTP 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Respuesta en formato JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "const historial = pm.response.json();",
+                  "",
+                  "const booster = historial",
+                  "    .flatMap(compra => compra.productos)",
+                  "    .find(producto =>",
+                  "        producto.id === pm.collectionVariables.get(\"idBooster\")",
+                  "    );",
+                  "",
+                  "pm.test(\"Booster presente en el historial\", function () {",
+                  "    pm.expect(booster).to.exist;",
+                  "});",
+                  "",
+                  "pm.test(\"Booster marcado como abierto\", function () {",
+                  "    pm.expect(booster.abierto).to.eql(true);",
+                  "});",
+                  "",
+                  "pm.test(\"El booster contiene 10 cartas\", function () {",
+                  "    pm.expect(booster.cantidadCartas).to.eql(10);",
+                  "    pm.expect(booster.cartas).to.be.an(\"array\").with.lengthOf(10);",
+                  "});",
+                  "",
+                  "pm.test(\"Las cartas contienen informacion completa\", function () {",
+                  "    booster.cartas.forEach(carta => {",
+                  "        pm.expect(carta.id).to.be.a(\"string\");",
+                  "        pm.expect(carta.nombre).to.be.a(\"string\");",
+                  "        pm.expect(carta.rareza).to.be.oneOf([\"N\", \"UC\", \"R\", \"SR\", \"UR\"]);",
+                  "        pm.expect(carta.precioUsd).to.be.a(\"number\");",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/compras",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{clientUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{clientPassword}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },

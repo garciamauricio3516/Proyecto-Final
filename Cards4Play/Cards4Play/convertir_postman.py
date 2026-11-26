@@ -37,7 +37,7 @@ items = [{'name':p.name,'item':[convertir(f) for f in sorted(p.glob('*.request.y
 coleccion = {'info':{'name':'Cards4Play API REST','description':'Coleccion de pruebas funcionales y de seguridad del proyecto Cards4Play. Credenciales de demostracion local.','schema':'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'},'variable':variables,'item':items}
 n = sum(len(c['item']) for c in items)
 t = sum('\n'.join(e['script']['exec']).count('pm.test(') for c in items for p in c['item'] for e in p['event'] if e['listen']=='test')
-assert (len(items),n,t,len(variables)) == (7,31,163,13), f'Conteos inesperados: {len(items)}, {n}, {t}, {len(variables)}'
+assert (len(items),n,t,len(variables)) == (7,32,169,13), f'Conteos inesperados: {len(items)}, {n}, {t}, {len(variables)}'
 SALIDA.write_text(json.dumps(coleccion,indent=2,ensure_ascii=False),encoding='utf-8')
 print('='*50)
 print('CONVERSION COMPLETADA CORRECTAMENTE')

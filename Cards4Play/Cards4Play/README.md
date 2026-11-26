@@ -136,6 +136,10 @@ su compra ni abrirse más de una vez.
 
 - Cada compra queda registrada en el historial del cliente.
 - Los clientes solamente pueden consultar su propio historial.
+- - El historial de compras muestra la rareza de las cartas adquiridas.
+- Los boosters comprados muestran su estado de apertura.
+- Los boosters cerrados mantienen oculto su contenido.
+- Los boosters abiertos muestran las 10 cartas obtenidas, incluyendo su identificador, nombre, tipo, rareza y precio en USD.
 - Los productos vendidos se retiran del inventario de la tienda.
 - Se registra el valor de la compra en USD y COP.
 
@@ -532,8 +536,8 @@ el servicio.
 ### Resultados
 
 - 23 verificaciones funcionales del backend.
-- 31 peticiones automatizadas de la API REST.
-- 163 pruebas automatizadas con Postman.
+- 32 peticiones automatizadas de la API REST.
+- 169 pruebas automatizadas con Postman.
 - Verificación de persistencia en Docker.
 - Verificación de tasa de cambio predeterminada.
 - Verificación de autenticación y autorización.
