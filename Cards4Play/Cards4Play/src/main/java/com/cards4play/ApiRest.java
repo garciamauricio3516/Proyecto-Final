@@ -30,6 +30,7 @@ import java.util.LinkedHashMap;
 import Controladores.ControladorCompra;
 import Controladores.ControladorBooster;
 import Modelo.Compra;
+import Modelo.Booster;
 
 import Controladores.ControladorTorneo;
 import Modelo.Torneo;
@@ -849,6 +850,8 @@ public class ApiRest {
     }
 
     // Construir una respuesta segura de la compra
+
+    // Construir una respuesta segura de la compra
     private Map<String, Object> compraJson(Compra compra) {
 
         Map<String, Object> datos = new LinkedHashMap<>();
@@ -871,6 +874,38 @@ public class ApiRest {
             item.put("tipo", producto.getTipo());
             item.put("precioUsd", producto.getPrecioUsd());
 
+            if (producto instanceof Carta carta) {
+                item.put("rareza", carta.getRareza().name());
+            }
+
+            if (producto instanceof Booster booster) {
+
+                item.put("abierto", booster.estaAbierto());
+
+                if (booster.estaAbierto()) {
+
+                    List<Map<String, Object>> contenido =
+                            new ArrayList<>();
+
+                    for (Carta carta : booster.getCartasSiAbierto()) {
+
+                        Map<String, Object> cartaDatos =
+                                new LinkedHashMap<>();
+
+                        cartaDatos.put("id", carta.getId());
+                        cartaDatos.put("nombre", carta.getNombre());
+                        cartaDatos.put("tipo", carta.getTipo());
+                        cartaDatos.put("rareza", carta.getRareza().name());
+                        cartaDatos.put("precioUsd", carta.getPrecioUsd());
+
+                        contenido.add(cartaDatos);
+                    }
+
+                    item.put("cantidadCartas", contenido.size());
+                    item.put("cartas", contenido);
+                }
+            }
+
             productos.add(item);
         }
 
@@ -878,6 +913,7 @@ public class ApiRest {
 
         return datos;
     }
+
 
     // Construir una respuesta JSON del torneo
     private Map<String, Object> torneoJson(Torneo torneo) {
